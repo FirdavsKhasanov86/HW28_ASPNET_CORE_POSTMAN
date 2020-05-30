@@ -2,38 +2,86 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HW28_ASPNET_CORE_POSTMAN.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace HW28_ASPNET_CORE_POSTMAN.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class WeatherForecastController : ControllerBase
+    [Route("api")]
+    public class CitatasController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        DataContext db;
 
-        private readonly ILogger<WeatherForecastController> _logger;
-
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public CitatasController(DataContext context)
         {
-            _logger = logger;
+            db = context;
+           
         }
 
+        // GET: api/<controller>
+
         [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        public async Task<ActionResult<IEnumerable<Citata>>> Get()
         {
-            var rng = new Random();
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            return await db.Citatas.ToListAsync();
+        }
+
+        // GET api/Citatas/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Citata>> Get(int id)
+        {
+            Citata Citata = await db.Citatas.FirstOrDefaultAsync(x => x.Id == id);
+            if (Citata == null)
+                return NotFound();
+            return new ObjectResult(Citata);
+        }
+
+        // POST api/Citatas
+        [HttpPost]
+        public ActionResult Post(Citata Citata)
+        {
+            if (Citata == null)
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = rng.Next(-20, 55),
-                Summary = Summaries[rng.Next(Summaries.Length)]
-            })
-            .ToArray();
+                return BadRequest();
+            }
+            db.Citatas.Add(Citata);
+             db.SaveChanges();
+            return Ok();
+        }
+
+        // PUT api/Citatas/
+        [HttpPut("{id}")]
+        public ActionResult Put(Citata Citata, int id)
+        {
+            if (Citata == null)
+            {
+                return BadRequest();
+            }
+            Citata.Id = id;
+            if (!db.Citatas.Any(x => x.Id == Citata.Id))
+            {
+                return NotFound();
+            }
+            db.Update(Citata);
+             db.SaveChanges();
+            return Ok();
+        }
+
+        // DELETE api/Citatas/5
+        [HttpDelete("{id}")]
+        public ActionResult Delete(int id)
+        {
+            Citata Citata = db.Citatas.FirstOrDefault(x => x.Id == id);
+            if (Citata == null)
+            {
+                return NotFound();
+            }
+            db.Citatas.Remove(Citata);
+             db.SaveChanges();
+            return Ok(Citata);
         }
     }
 }
